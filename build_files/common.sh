@@ -27,11 +27,22 @@ EOF
 # List of rpmfusion packages can be found here:
 # https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/43/x86_64/repoview/index.html&protocol=https&redirect=1
 
+# Workaround for RPM packages that install to /opt (like mullvad-vpn).
+# On ostree/bootc images, /opt is a symlink to var/opt, which causes cpio to fail.
+mv /opt /opt.bak
+mkdir /opt
+
 dnf5 install -y \
     chezmoi \
     mullvad-vpn \
     netbird \
     tmux
+
+# Move installed files to /var/opt and restore /opt symlink
+mkdir -p /var/opt
+cp -a /opt/. /var/opt/
+rm -rf /opt
+mv /opt.bak /opt
 
 ### Enable services
 systemctl enable netbird
