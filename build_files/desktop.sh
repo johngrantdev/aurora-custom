@@ -13,7 +13,7 @@ dnf5 install -y looking-glass-client
 dnf5 -y copr enable hikariknight/looking-glass-kvmfr
 dnf5 install -y akmods akmod-kvmfr kernel-devel
 
-KVER=$(ls /usr/lib/modules)
+KVER="$(rpm -q --qf '%{VERSION}-%{RELEASE}.%{ARCH}' kernel-core)"
 akmods --force --kernels "$KVER"
 modinfo "/usr/lib/modules/${KVER}/extra/kvmfr/kvmfr.ko" || \
     modinfo "/usr/lib/modules/${KVER}/extra/kvmfr/kvmfr.ko.xz"
