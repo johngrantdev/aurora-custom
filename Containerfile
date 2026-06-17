@@ -40,3 +40,20 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 ### LINTING
 ## Verify final image and contents are correct.
 RUN bootc container lint
+
+### SIGNING POLICY
+## Bake cosign public key and trust policy so bootc upgrade enforces signature
+## verification for this repository. Without these files, the image is signed
+## but the installed system never checks signatures on future upgrades.
+COPY cosign.pub /etc/pki/containers/aurora-custom.pub
+RUN printf 'docker:\n  ghcr.io/johngrantdev/aurora-custom:\n    use-sigstore-attachments: true\n' \
+      > /etc/containers/registries.d/aurora-custom.yaml
+RUN python3 -c "
+import json, os
+path = '/etc/containers/policy.json'
+p = json.load(open(path)) if os.path.exists(path) else {'default': [{'type': 'insecureAcceptAnything'}], 'transports': {}}
+p.setdefault('transports', {}).setdefault('docker', {})['ghcr.io/johngrantdev/aurora-custom'] = [
+    {'type': 'sigstoreSigned', 'keyPath': '/etc/pki/containers/aurora-custom.pub', 'signedIdentity': {'type': 'matchRepository'}}
+]
+json.dump(p, open(path, 'w'), indent=2)
+"
