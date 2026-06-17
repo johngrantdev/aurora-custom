@@ -1,0 +1,2 @@
+[bootc]
+kargs = ["mem_sleep_default=s2idle"]
