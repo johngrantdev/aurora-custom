@@ -62,6 +62,17 @@ cp -a /opt/. /var/opt/
 rm -rf /opt
 mv /opt.bak /opt
 
+### Signing policy — merge sigstoreSigned entry into base image policy.json
+python3 << 'PYEOF'
+import json, os
+path = '/etc/containers/policy.json'
+p = json.load(open(path)) if os.path.exists(path) else {'default': [{'type': 'reject'}], 'transports': {}}
+p.setdefault('transports', {}).setdefault('docker', {})['ghcr.io/johngrantdev/aurora-custom'] = [
+    {'type': 'sigstoreSigned', 'keyPath': '/etc/pki/containers/aurora-custom.pub', 'signedIdentity': {'type': 'matchRepository'}}
+]
+json.dump(p, open(path, 'w'), indent=2)
+PYEOF
+
 ### Enable services
 systemctl enable mullvad-daemon
 systemctl enable netbird
