@@ -5,6 +5,8 @@ COPY build_files /
 # Base Image
 FROM ghcr.io/ublue-os/aurora-dx:stable
 
+ARG FLAVOR=laptop
+
 ## Other possible base images include:
 # FROM ghcr.io/ublue-os/bazzite:latest
 # FROM ghcr.io/ublue-os/bluefin-nvidia:stable
@@ -33,7 +35,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
     --mount=type=cache,dst=/var/log \
     --mount=type=tmpfs,dst=/tmp \
-    /ctx/build.sh
+    FLAVOR=${FLAVOR} /ctx/build.sh
     
 ### LINTING
 ## Verify final image and contents are correct.
