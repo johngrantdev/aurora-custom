@@ -143,12 +143,11 @@ jobs:
       - name: Sign container image
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         run: |
-          # Sign by digest with legacy attachment format so use-sigstore-attachments
-          # discovery in the baked policy.json can find the signature at bootc upgrade time.
-          cosign sign -y \
-            --key env://COSIGN_PRIVATE_KEY \
-            --registry-referrers-mode=legacy \
-            "${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}"
+          IMAGE_FULL="${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
+          for tag in ${{ steps.metadata.outputs.tags }}; do
+            cosign sign -y --key env://COSIGN_PRIVATE_KEY $IMAGE_FULL:$tag
+          done
         env:
+          TAGS: ${{ steps.push.outputs.digest }}
           COSIGN_EXPERIMENTAL: false
           COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
