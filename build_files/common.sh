@@ -10,7 +10,15 @@ dnf5 remove -y firefox firefox-langpacks
 dnf5 config-manager addrepo --from-repofile=https://repository.mullvad.net/rpm/stable/mullvad.repo
 
 # Netbird
-dnf5 config-manager addrepo --from-repofile=https://pkgs.netbird.io/yum/config.repo
+cat <<EOF > /etc/yum.repos.d/netbird.repo
+[netbird]
+name=netbird
+baseurl=https://pkgs.netbird.io/yum/
+enabled=1
+gpgcheck=1
+gpgkey=https://pkgs.netbird.io/yum/repodata/repomd.xml.key
+repo_gpgcheck=1
+EOF
 
 ### Install packages
 
