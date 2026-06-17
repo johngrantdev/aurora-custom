@@ -2,7 +2,16 @@
 set -eoux pipefail
 
 ### Remove packages
-dnf5 remove -y firefox firefox-langpacks
+dnf5 remove -y firefox firefox-langpacks kcm_ublue
+
+### Remove aurora-specific rebase tooling not applicable to a custom image
+rm -f /usr/bin/ublue-rollback-helper
+sed -i \
+    -e '/^alias switch-stream := rebase-helper$/d' \
+    -e '/^alias switch-streams := rebase-helper$/d' \
+    -e '/^alias rollback-helper := rebase-helper$/d' \
+    -e '/^# Rebase assistant$/{N;N;N;d}' \
+    /usr/share/ublue-os/just/system.just
 
 ### Add repos
 
@@ -57,3 +66,4 @@ mv /opt.bak /opt
 systemctl enable mullvad-daemon
 systemctl enable netbird
 systemctl enable podman.socket
+systemctl enable uupd.timer
