@@ -32,11 +32,20 @@ EOF
 mv /opt /opt.bak
 mkdir /opt
 
+# Workaround for RPM packages that try to start systemd services during install.
+# We temporarily replace systemctl with a dummy command to prevent build failures.
+mv /usr/bin/systemctl /usr/bin/systemctl.bak
+ln -s /usr/bin/true /usr/bin/systemctl
+
 dnf5 install -y \
     chezmoi \
     mullvad-vpn \
     netbird \
     tmux
+
+# Restore systemctl
+rm /usr/bin/systemctl
+mv /usr/bin/systemctl.bak /usr/bin/systemctl
 
 # Move installed files to /var/opt and restore /opt symlink
 mkdir -p /var/opt
@@ -45,5 +54,6 @@ rm -rf /opt
 mv /opt.bak /opt
 
 ### Enable services
+systemctl enable mullvad-daemon
 systemctl enable netbird
 systemctl enable podman.socket
