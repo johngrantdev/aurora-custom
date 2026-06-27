@@ -1,0 +1,23 @@
+{
+  "default": [{"type": "reject"}],
+  "transports": {
+    "docker": {
+      "docker.io": [{"type": "insecureAcceptAnything"}],
+      "quay.io": [{"type": "insecureAcceptAnything"}],
+      "ghcr.io": [{"type": "insecureAcceptAnything"}],
+      "registry.fedoraproject.org": [{"type": "insecureAcceptAnything"}],
+      "registry.access.redhat.com": [{"type": "insecureAcceptAnything"}],
+      "registry.k8s.io": [{"type": "insecureAcceptAnything"}],
+      "ghcr.io/johngrantdev/aurora-custom": [
+        {
+          "type": "sigstoreSigned",
+          "keyPath": "/etc/pki/containers/aurora-custom.pub",
+          "signedIdentity": {"type": "matchRepository"}
+        }
+      ]
+    },
+    "docker-daemon": {
+      "": [{"type": "insecureAcceptAnything"}]
+    }
+  }
+}
