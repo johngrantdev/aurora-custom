@@ -52,6 +52,15 @@ dnf5 install -y \
     netbird \
     tmux
 
+### Network Audio Handling
+# plasma-network-audio — KDE module for managing AirPlay/RAOP network audio devices
+dnf5 install -y https://github.com/johngrantdev/plasma-network-audio/releases/download/v0.1-alpha.1/plasma-network-audio-0.1-0.alpha_1.fc44.x86_64.rpm
+# disable raop-discover auto-sink creation
+# Removes the symlink that enables libpipewire-module-raop-discover, which
+# auto-creates audio sinks for any AirPlay/RAOP device on the network.
+# libpipewire-module-raop-sink remains available for explicit connections.
+rm /usr/share/pipewire/pipewire.conf.d/50-raop.conf
+
 # Restore systemctl
 rm /usr/bin/systemctl
 mv /usr/bin/systemctl.bak /usr/bin/systemctl
@@ -72,12 +81,6 @@ p.setdefault('transports', {}).setdefault('docker', {})['ghcr.io/johngrantdev/au
 ]
 json.dump(p, open(path, 'w'), indent=2)
 PYEOF
-
-### Audio — disable raop-discover auto-sink creation
-# Removes the symlink that enables libpipewire-module-raop-discover, which
-# auto-creates audio sinks for any AirPlay/RAOP device on the network.
-# libpipewire-module-raop-sink remains available for explicit connections.
-rm /usr/share/pipewire/pipewire.conf.d/50-raop.conf
 
 ### Enable services
 systemctl enable mullvad-daemon
