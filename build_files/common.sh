@@ -62,6 +62,12 @@ cp -a /opt/. /var/opt/
 rm -rf /opt
 mv /opt.bak /opt
 
+### Audio — disable raop-discover auto-sink creation
+# Removes the symlink that enables libpipewire-module-raop-discover, which
+# auto-creates audio sinks for any AirPlay/RAOP device on the network.
+# libpipewire-module-raop-sink remains available for explicit connections.
+rm /usr/share/pipewire/pipewire.conf.d/50-raop.conf
+
 ### Enable services
 systemctl enable mullvad-daemon
 systemctl enable netbird
