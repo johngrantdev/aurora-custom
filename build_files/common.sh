@@ -58,7 +58,7 @@ BW_VERSION="2026.6.0"
 curl -fsSL "https://github.com/bitwarden/clients/releases/download/cli-v${BW_VERSION}/bw-linux-${BW_VERSION}.zip" \
     -o /tmp/bw.zip
 unzip /tmp/bw.zip -d /tmp/bw-extract
-install -Dm755 /tmp/bw-extract/bw /usr/local/bin/bw
+install -m755 /tmp/bw-extract/bw /usr/bin/bw
 rm -rf /tmp/bw.zip /tmp/bw-extract
 
 ### Network Audio Handling
