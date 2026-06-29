@@ -52,6 +52,15 @@ dnf5 install -y \
     netbird \
     tmux
 
+### Bitwarden CLI
+# Not available as an RPM — install official binary from GitHub releases
+BW_VERSION="2026.6.0"
+curl -fsSL "https://github.com/bitwarden/clients/releases/download/cli-v${BW_VERSION}/bw-linux-${BW_VERSION}.zip" \
+    -o /tmp/bw.zip
+unzip /tmp/bw.zip -d /tmp/bw-extract
+install -Dm755 /tmp/bw-extract/bw /usr/local/bin/bw
+rm -rf /tmp/bw.zip /tmp/bw-extract
+
 ### Network Audio Handling
 # plasma-network-audio — KDE module for managing AirPlay/RAOP network audio devices
 dnf5 install -y https://github.com/johngrantdev/plasma-network-audio/releases/download/v0.1-alpha.1/plasma-network-audio-0.1-0.alpha_1.fc44.x86_64.rpm
