@@ -50,6 +50,7 @@ dnf5 install -y \
     chezmoi \
     mullvad-vpn \
     netbird \
+    papirus-icon-theme \
     tmux
 
 ### Bitwarden CLI
@@ -60,6 +61,53 @@ curl -fsSL "https://github.com/bitwarden/clients/releases/download/cli-v${BW_VER
 unzip /tmp/bw.zip -d /tmp/bw-extract
 install -m755 /tmp/bw-extract/bw /usr/bin/bw
 rm -rf /tmp/bw.zip /tmp/bw-extract
+
+### Darkly — Qt widget style + KWin window decoration
+# Not in any Fedora/Copr repo; built from source.
+DARKLY_VERSION="0.5.38"
+DARKLY_BUILD_DEPS=(
+    cmake gcc-c++ extra-cmake-modules
+    qt6-qtbase-devel
+    kf6-frameworkintegration-devel
+    kf6-kcmutils-devel
+    kf6-kirigami-devel
+    kdecoration-devel
+)
+dnf5 install -y "${DARKLY_BUILD_DEPS[@]}"
+curl -fsSL "https://github.com/Bali10050/Darkly/archive/refs/tags/v${DARKLY_VERSION}.tar.gz" \
+    -o /tmp/darkly.tar.gz
+tar -xzf /tmp/darkly.tar.gz -C /tmp/
+cmake \
+    -B /tmp/darkly-build \
+    -S "/tmp/Darkly-${DARKLY_VERSION}" \
+    -DBUILD_TESTING=OFF \
+    -Wno-dev \
+    -DKDE_INSTALL_USE_QT_SYS_PATHS=ON \
+    -DBUILD_QT6=ON \
+    -DBUILD_QT5=OFF
+cmake --build /tmp/darkly-build -j "$(nproc)"
+cmake --install /tmp/darkly-build
+rm -rf /tmp/darkly.tar.gz "/tmp/Darkly-${DARKLY_VERSION}" /tmp/darkly-build
+dnf5 remove -y --noautoremove "${DARKLY_BUILD_DEPS[@]}"
+
+### KDE Theming — downloaded from GitHub, not in Fedora repos
+
+# Ant-Dark plasma desktop theme (github.com/EliverLara/Ant)
+ANT_VERSION="v1.3.0"
+curl -fsSL "https://github.com/EliverLara/Ant/archive/refs/tags/${ANT_VERSION}.tar.gz" \
+    -o /tmp/ant.tar.gz
+tar -xzf /tmp/ant.tar.gz -C /tmp/
+mkdir -p /usr/share/plasma/desktoptheme/Ant-Dark
+cp -r "/tmp/Ant-${ANT_VERSION#v}/kde/Dark/." /usr/share/plasma/desktoptheme/Ant-Dark/
+rm -rf /tmp/ant.tar.gz "/tmp/Ant-${ANT_VERSION#v}"
+
+# Advanced Weather Widget plasmoid (github.com/pnedyalkov91/advanced-weather-widget)
+AWW_VERSION="1.6.2"
+curl -fsSL "https://github.com/pnedyalkov91/advanced-weather-widget/releases/download/${AWW_VERSION}/advanced-weather-widget.plasmoid" \
+    -o /tmp/weather-widget.plasmoid
+mkdir -p /usr/share/plasma/plasmoids/org.kde.plasma.advanced-weather-widget
+unzip /tmp/weather-widget.plasmoid -d /usr/share/plasma/plasmoids/org.kde.plasma.advanced-weather-widget/
+rm /tmp/weather-widget.plasmoid
 
 ### Network Audio Handling
 # plasma-network-audio — KDE module for managing AirPlay/RAOP network audio devices
