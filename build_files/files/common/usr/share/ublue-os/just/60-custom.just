@@ -54,3 +54,21 @@ setup-dotfiles:
     echo "Done! Dotfiles applied."
     echo "To keep the vault unlocked in your current shell, run:"
     echo "  export BW_SESSION=\$(bw unlock --raw)"
+
+# Randomize MAC address for the current Wi-Fi connection to improve privacy on public networks
+[group('Network')]
+randomize-mac:
+    #!/usr/bin/env bash
+    set -eou pipefail
+
+    ACTIVE=$(nmcli -t -f NAME,TYPE connection show --active | awk -F: '$2=="802-11-wireless"{print $1; exit}')
+    if [[ -z "$ACTIVE" ]]; then
+        echo "No active Wi-Fi connection found."
+        exit 1
+    fi
+
+    echo "==> Setting MAC randomization for: $ACTIVE"
+    nmcli connection modify "$ACTIVE" wifi.cloned-mac-address random
+    nmcli connection down "$ACTIVE"
+    nmcli connection up "$ACTIVE"
+    echo "Done. New MAC: $(ip link show wlan0 | awk '/ether/{print $2}')"

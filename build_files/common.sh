@@ -47,11 +47,18 @@ mv /usr/bin/systemctl /usr/bin/systemctl.bak
 ln -s /usr/bin/true /usr/bin/systemctl
 
 dnf5 install -y \
+    bat \
+    btop \
     chezmoi \
+    eza \
+    fd-find \
+    git-delta \
     mullvad-vpn \
     netbird \
     papirus-icon-theme \
-    tmux
+    ripgrep \
+    tmux \
+    zoxide
 
 ### Bitwarden CLI
 # Not available as an RPM — install official binary from GitHub releases
@@ -96,13 +103,12 @@ dnf5 remove -y --noautoremove "${DARKLY_BUILD_DEPS[@]}"
 ### KDE Theming — downloaded from GitHub, not in Fedora repos
 
 # Ant-Dark plasma desktop theme (github.com/EliverLara/Ant)
-ANT_COMMIT="79ddc06b40ad3a8d0e61a5d1a35af9e9be42ae04"
-curl -fsSL "https://github.com/EliverLara/Ant/archive/${ANT_COMMIT}.tar.gz" \
+curl -fsSL "https://github.com/EliverLara/Ant/archive/refs/heads/master.tar.gz" \
     -o /tmp/ant.tar.gz
 tar -xzf /tmp/ant.tar.gz -C /tmp/
-cp -r "/tmp/Ant-${ANT_COMMIT}/kde/Dark/plasma/desktoptheme/Ant-Dark" \
+cp -r /tmp/Ant-master/kde/Dark/plasma/desktoptheme/Ant-Dark \
     /usr/share/plasma/desktoptheme/Ant-Dark
-rm -rf /tmp/ant.tar.gz "/tmp/Ant-${ANT_COMMIT}"
+rm -rf /tmp/ant.tar.gz /tmp/Ant-master
 
 # Advanced Weather Widget plasmoid (github.com/pnedyalkov91/advanced-weather-widget)
 AWW_VERSION="1.6.2"
