@@ -69,11 +69,11 @@ DARKLY_BUILD_DEPS=(
     cmake gcc-c++ extra-cmake-modules
     qt6-qtbase-devel
     kf6-frameworkintegration-devel
-    kf6-guiaddons-devel
-    kf6-i18n-devel
+    kf6-kguiaddons-devel
+    kf6-ki18n-devel
     kf6-kcmutils-devel
     kf6-kirigami-devel
-    kf6-windowsystem-devel
+    kf6-kwindowsystem-devel
     kdecoration-devel
 )
 dnf5 install -y "${DARKLY_BUILD_DEPS[@]}"
