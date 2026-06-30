@@ -96,13 +96,13 @@ dnf5 remove -y --noautoremove "${DARKLY_BUILD_DEPS[@]}"
 ### KDE Theming — downloaded from GitHub, not in Fedora repos
 
 # Ant-Dark plasma desktop theme (github.com/EliverLara/Ant)
-ANT_VERSION="v1.3.0"
-curl -fsSL "https://github.com/EliverLara/Ant/archive/refs/tags/${ANT_VERSION}.tar.gz" \
+ANT_COMMIT="79ddc06b40ad3a8d0e61a5d1a35af9e9be42ae04"
+curl -fsSL "https://github.com/EliverLara/Ant/archive/${ANT_COMMIT}.tar.gz" \
     -o /tmp/ant.tar.gz
 tar -xzf /tmp/ant.tar.gz -C /tmp/
-mkdir -p /usr/share/plasma/desktoptheme/Ant-Dark
-cp -r "/tmp/Ant-${ANT_VERSION#v}/kde/Dark/." /usr/share/plasma/desktoptheme/Ant-Dark/
-rm -rf /tmp/ant.tar.gz "/tmp/Ant-${ANT_VERSION#v}"
+cp -r "/tmp/Ant-${ANT_COMMIT}/kde/Dark/plasma/desktoptheme/Ant-Dark" \
+    /usr/share/plasma/desktoptheme/Ant-Dark
+rm -rf /tmp/ant.tar.gz "/tmp/Ant-${ANT_COMMIT}"
 
 # Advanced Weather Widget plasmoid (github.com/pnedyalkov91/advanced-weather-widget)
 AWW_VERSION="1.6.2"
