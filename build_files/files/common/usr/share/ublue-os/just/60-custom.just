@@ -7,8 +7,13 @@ setup-dotfiles:
     set -eou pipefail
 
     echo "==> Configuring Bitwarden CLI..."
-    read -rp "Vaultwarden server URL: " BW_SERVER
-    bw config server "$BW_SERVER"
+    BW_STATUS=$(bw status 2>/dev/null | jq -r '.status' 2>/dev/null || echo "unauthenticated")
+    if [[ "$BW_STATUS" == "unauthenticated" ]]; then
+        read -rp "Vaultwarden server URL: " BW_SERVER
+        bw config server "$BW_SERVER"
+    else
+        echo "Already authenticated — skipping server config."
+    fi
 
     echo ""
     echo "==> Unlocking Bitwarden vault..."
