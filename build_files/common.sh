@@ -52,7 +52,6 @@ dnf5 install -y \
     chezmoi \
     eza \
     fd-find \
-    fish \
     git-delta \
     mullvad-vpn \
     netbird \
@@ -80,6 +79,16 @@ curl -fsSL "https://github.com/sigoden/aichat/releases/download/v${AICHAT_VERSIO
 tar -xzf /tmp/aichat.tar.gz -C /tmp/
 install -m755 /tmp/aichat /usr/bin/aichat
 rm -rf /tmp/aichat.tar.gz /tmp/aichat
+
+### Starship prompt
+# Dropped from Fedora's repos after F36 — install official binary from
+# GitHub releases.
+STARSHIP_VERSION="1.26.0"
+curl -fsSL "https://github.com/starship/starship/releases/download/v${STARSHIP_VERSION}/starship-x86_64-unknown-linux-musl.tar.gz" \
+    -o /tmp/starship.tar.gz
+tar -xzf /tmp/starship.tar.gz -C /tmp/
+install -m755 /tmp/starship /usr/bin/starship
+rm -rf /tmp/starship.tar.gz /tmp/starship
 
 ### Darkly — Qt widget style + KWin window decoration
 # Not in any Fedora/Copr repo; built from source.
