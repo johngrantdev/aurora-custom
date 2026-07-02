@@ -2,16 +2,7 @@
 set -eoux pipefail
 
 ### Remove packages
-dnf5 remove -y firefox firefox-langpacks kcm_ublue
-
-### Remove aurora-specific rebase tooling not applicable to a custom image
-rm -f /usr/bin/ublue-rollback-helper
-sed -i \
-    -e '/^alias switch-stream := rebase-helper$/d' \
-    -e '/^alias switch-streams := rebase-helper$/d' \
-    -e '/^alias rollback-helper := rebase-helper$/d' \
-    -e '/^# Rebase assistant$/{N;N;N;d}' \
-    /usr/share/ublue-os/just/system.just
+dnf5 remove -y firefox firefox-langpacks plasma-discover plasma-discover-libs
 
 ### Add repos
 
@@ -28,6 +19,22 @@ gpgcheck=1
 gpgkey=https://pkgs.netbird.io/yum/repodata/repomd.xml.key
 repo_gpgcheck=1
 EOF
+
+# negativo17 multimedia
+dnf5 config-manager addrepo --from-repofile="https://negativo17.org/repos/fedora-multimedia.repo"
+dnf5 config-manager setopt fedora-multimedia.priority=90
+
+# Docker CE
+dnf5 config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo
+sed -i "s/enabled=.*/enabled=0/g" /etc/yum.repos.d/docker-ce.repo
+
+# Tailscale
+dnf5 config-manager addrepo --from-repofile=https://pkgs.tailscale.com/stable/fedora/tailscale.repo
+dnf5 config-manager setopt tailscale-stable.enabled=0
+
+# VSCodium
+dnf5 config-manager addrepo --from-repofile=https://repo.vscodium.dev/vscodium.repo
+dnf5 config-manager setopt vscodium.enabled=0
 
 ### Install packages
 
@@ -50,18 +57,101 @@ dnf5 install -y \
     bat \
     btop \
     chezmoi \
+    direnv \
+    dmidecode \
     eza \
+    fastfetch \
     fd-find \
     git-delta \
+    gum \
+    just \
     mullvad-vpn \
     netbird \
     papirus-icon-theme \
+    powerstat \
     ripgrep \
     tmux \
+    ugrep \
     zoxide
 
+dnf5 install -y --enablerepo='tailscale-stable' tailscale
+dnf5 install -y --enablerepo='vscodium' codium
+
+chmod +x /usr/bin/ujust
+
+### Codec/driver overrides (negativo17)
+OVERRIDES=(
+    intel-gmmlib
+    intel-mediasdk
+    intel-vpl-gpu-rt
+    libheif
+    libva
+    libva-intel-media-driver
+    mesa-dri-drivers
+    mesa-filesystem
+    mesa-libEGL
+    mesa-libGL
+    mesa-libgbm
+    mesa-vulkan-drivers
+)
+dnf5 distro-sync --skip-unavailable -y --repo='fedora-multimedia' "${OVERRIDES[@]}"
+dnf5 versionlock add "${OVERRIDES[@]}"
+dnf5 install -y \
+    ffmpeg \
+    ffmpeg-libs \
+    libva-utils \
+    pipewire-libs-extra
+
+### Virtualization + containers
+dnf5 install -y \
+    cockpit-bridge \
+    cockpit-machines \
+    cockpit-networkmanager \
+    cockpit-podman \
+    cockpit-storaged \
+    cockpit-system \
+    edk2-ovmf \
+    incus \
+    incus-agent \
+    libvirt \
+    libvirt-nss \
+    lxc \
+    podman-compose \
+    podman-machine \
+    podman-tui \
+    qemu \
+    qemu-img \
+    qemu-system-x86-core \
+    qemu-user-binfmt \
+    qemu-user-static \
+    virt-manager \
+    virt-v2v \
+    virt-viewer
+dnf5 install -y --enablerepo=docker-ce-stable \
+    containerd.io \
+    docker-buildx-plugin \
+    docker-ce \
+    docker-ce-cli \
+    docker-compose-plugin
+
+### Backup, security/auth, and hardware extras
+dnf5 install -y \
+    pam-u2f \
+    pam_yubico \
+    pamu2fcfg \
+    rclone \
+    restic \
+    solaar-udev \
+    yubikey-manager
+
+### uupd — unified rpm-ostree + flatpak update timer
+# Repo disabled immediately after enabling; install is scoped to its repo ID
+# so nothing else can shadow the package.
+dnf5 -y copr enable ublue-os/packages
+dnf5 -y copr disable ublue-os/packages
+dnf5 -y install --enablerepo="copr:copr.fedorainfracloud.org:ublue-os:packages" uupd
+
 ### Bitwarden CLI
-# Not available as an RPM — install official binary from GitHub releases
 BW_VERSION="2026.6.0"
 curl -fsSL "https://github.com/bitwarden/clients/releases/download/cli-v${BW_VERSION}/bw-linux-${BW_VERSION}.zip" \
     -o /tmp/bw.zip
@@ -70,9 +160,6 @@ install -m755 /tmp/bw-extract/bw /usr/bin/bw
 rm -rf /tmp/bw.zip /tmp/bw-extract
 
 ### aichat CLI
-# Not available as an RPM — install official binary from GitHub releases.
-# Unified CLI for OpenAI/Claude/Gemini/Ollama and any OpenAI-compatible
-# endpoint, so it can talk to a local or network-hosted LLM server.
 AICHAT_VERSION="0.30.0"
 curl -fsSL "https://github.com/sigoden/aichat/releases/download/v${AICHAT_VERSION}/aichat-v${AICHAT_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
     -o /tmp/aichat.tar.gz
@@ -81,8 +168,6 @@ install -m755 /tmp/aichat /usr/bin/aichat
 rm -rf /tmp/aichat.tar.gz /tmp/aichat
 
 ### Starship prompt
-# Dropped from Fedora's repos after F36 — install official binary from
-# GitHub releases.
 STARSHIP_VERSION="1.26.0"
 curl -fsSL "https://github.com/starship/starship/releases/download/v${STARSHIP_VERSION}/starship-x86_64-unknown-linux-musl.tar.gz" \
     -o /tmp/starship.tar.gz
@@ -90,8 +175,20 @@ tar -xzf /tmp/starship.tar.gz -C /tmp/
 install -m755 /tmp/starship /usr/bin/starship
 rm -rf /tmp/starship.tar.gz /tmp/starship
 
+### Nerd Fonts
+NERD_FONTS_VERSION="3.4.0"
+NERD_FONTS=(0xProto CascadiaMono ComicShannsMono DroidSansMono FiraCode Go-Mono IBMPlexMono JetBrainsMono SourceCodePro Ubuntu)
+for font in "${NERD_FONTS[@]}"; do
+    curl -fsSL "https://github.com/ryanoasis/nerd-fonts/releases/download/v${NERD_FONTS_VERSION}/${font}.tar.xz" \
+        -o /tmp/nerdfont.tar.xz
+    mkdir -p "/usr/share/fonts/nerd-fonts/${font}"
+    tar -xJf /tmp/nerdfont.tar.xz -C "/usr/share/fonts/nerd-fonts/${font}"
+    rm /tmp/nerdfont.tar.xz
+done
+fc-cache -f
+
+### KDE Theming
 ### Darkly — Qt widget style + KWin window decoration
-# Not in any Fedora/Copr repo; built from source.
 DARKLY_VERSION="0.5.38"
 DARKLY_BUILD_DEPS=(
     cmake gcc-c++ extra-cmake-modules
@@ -121,8 +218,6 @@ cmake --install /tmp/darkly-build
 rm -rf /tmp/darkly.tar.gz "/tmp/Darkly-${DARKLY_VERSION}" /tmp/darkly-build
 dnf5 remove -y --noautoremove "${DARKLY_BUILD_DEPS[@]}"
 
-### KDE Theming — downloaded from GitHub, not in Fedora repos
-
 # Ant-Dark plasma desktop theme (github.com/EliverLara/Ant)
 curl -fsSL "https://github.com/EliverLara/Ant/archive/refs/heads/master.tar.gz" \
     -o /tmp/ant.tar.gz
@@ -131,7 +226,7 @@ cp -r /tmp/Ant-master/kde/Dark/plasma/desktoptheme/Ant-Dark \
     /usr/share/plasma/desktoptheme/Ant-Dark
 rm -rf /tmp/ant.tar.gz /tmp/Ant-master
 
-# Advanced Weather Widget plasmoid (github.com/pnedyalkov91/advanced-weather-widget)
+# Advanced Weather Widget
 AWW_VERSION="1.6.2"
 curl -fsSL "https://github.com/pnedyalkov91/advanced-weather-widget/releases/download/${AWW_VERSION}/advanced-weather-widget.plasmoid" \
     -o /tmp/weather-widget.plasmoid
@@ -172,5 +267,11 @@ PYEOF
 ### Enable services
 systemctl enable mullvad-daemon
 systemctl enable netbird
+systemctl enable tailscaled
 systemctl enable podman.socket
 systemctl enable uupd.timer
+systemctl enable docker.socket
+systemctl enable libvirtd.socket
+systemctl enable libvirt-relabel.service
+systemctl enable libvirt-group-membership.service
+systemctl enable install-default-flatpaks.service

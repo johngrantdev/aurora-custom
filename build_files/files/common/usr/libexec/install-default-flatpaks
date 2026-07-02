@@ -1,0 +1,7 @@
+#!/usr/bin/bash
+set -euo pipefail
+
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+# Bazaar (software center)
+flatpak install --system -y --noninteractive flathub io.github.kolunmi.Bazaar

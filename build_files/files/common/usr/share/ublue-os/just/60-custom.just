@@ -77,3 +77,66 @@ randomize-mac:
     nmcli connection down "$ACTIVE"
     nmcli connection up "$ACTIVE"
     echo "Done. New MAC: $(ip link show wlan0 | awk '/ether/{print $2}')"
+
+# Show system info
+[group('System')]
+system-info:
+    fastfetch
+
+# Boot into this device's BIOS/UEFI screen
+[group('System')]
+bios:
+    #!/usr/bin/bash
+    if [ ! -d /sys/firmware/efi ]; then
+        echo "Rebooting to legacy BIOS from OS is not supported."
+        exit 1
+    fi
+
+    if gum confirm "Reboot into BIOS?" ; then
+        systemctl reboot --firmware-setup
+    fi
+
+# Show BIOS info
+[group('System')]
+bios-info:
+    #!/usr/bin/bash
+    sudo bash <<'EOF'
+    echo "Manufacturer: $(dmidecode -s baseboard-manufacturer)"
+    echo "Product Name: $(dmidecode -s baseboard-product-name)"
+    echo "Version: $(dmidecode -s bios-version)"
+    echo "Release Date: $(dmidecode -s bios-release-date)"
+    EOF
+
+# Measure idle power draw
+[group('System')]
+check-idle-power-draw:
+    #!/usr/bin/bash
+    sudo powerstat -a -r
+
+# Update system and flatpaks
+[group('System')]
+update:
+    #!/usr/bin/bash
+    if systemctl cat -- uupd.timer &> /dev/null; then
+        SERVICE="uupd.service"
+    else
+        SERVICE="rpm-ostreed-automatic.service"
+    fi
+    if systemctl is-active --quiet "$SERVICE"; then
+        echo "Automatic updates are currently running, use \`journalctl -fexu $SERVICE\` to see logs"
+        exit 1
+    fi
+    # bootc upgrade doesn't support local layered packages, so fall back to
+    # rpm-ostree upgrade if LockLayering is off in /etc/rpm-ostreed.conf.
+    if command -v rpm-ostree >/dev/null 2>&1 && [ -f /etc/rpm-ostreed.conf ] && \
+        grep -qE '^[[:space:]]*LockLayering[[:space:]]*=[[:space:]]*true' /etc/rpm-ostreed.conf; then
+        sudo bootc upgrade
+    else
+        rpm-ostree upgrade
+    fi
+    if flatpak remotes | grep -q system; then
+        flatpak update -y
+    fi
+    if flatpak remotes | grep -q user; then
+        flatpak update --user -y
+    fi
