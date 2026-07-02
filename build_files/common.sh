@@ -52,6 +52,7 @@ dnf5 install -y \
     chezmoi \
     eza \
     fd-find \
+    fish \
     git-delta \
     mullvad-vpn \
     netbird \
@@ -68,6 +69,17 @@ curl -fsSL "https://github.com/bitwarden/clients/releases/download/cli-v${BW_VER
 unzip /tmp/bw.zip -d /tmp/bw-extract
 install -m755 /tmp/bw-extract/bw /usr/bin/bw
 rm -rf /tmp/bw.zip /tmp/bw-extract
+
+### aichat CLI
+# Not available as an RPM — install official binary from GitHub releases.
+# Unified CLI for OpenAI/Claude/Gemini/Ollama and any OpenAI-compatible
+# endpoint, so it can talk to a local or network-hosted LLM server.
+AICHAT_VERSION="0.30.0"
+curl -fsSL "https://github.com/sigoden/aichat/releases/download/v${AICHAT_VERSION}/aichat-v${AICHAT_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
+    -o /tmp/aichat.tar.gz
+tar -xzf /tmp/aichat.tar.gz -C /tmp/
+install -m755 /tmp/aichat /usr/bin/aichat
+rm -rf /tmp/aichat.tar.gz /tmp/aichat
 
 ### Darkly — Qt widget style + KWin window decoration
 # Not in any Fedora/Copr repo; built from source.
